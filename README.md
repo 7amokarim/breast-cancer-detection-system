@@ -1,98 +1,235 @@
-Breast Cancer Detection System
+# Breast Cancer Detection System
 
-An end-to-end AI system for detecting, classifying, and segmenting breast tumors using deep learning models and FastAPI.
+An AI-powered Breast Cancer Detection System using YOLOv8 and FastAPI for tumor detection, localization, and classification from mammogram images.
 
-⸻
+---
 
-Overview
+## Overview
 
-This project integrates multiple AI models to analyze medical images and provide:
-	•	Tumor detection (Tumor / Normal)
-	•	Tumor classification (Benign / Malignant)
-	•	Object detection using YOLO
-	•	Image segmentation using U-Net
+This project uses Deep Learning and Computer Vision techniques to detect breast cancer from mammography images.
 
-The system is designed for backend integration using FastAPI.
+The system performs:
 
-⸻
+* Tumor Detection
+* Tumor Localization using Bounding Boxes
+* Classification (Cancer / Normal)
+* Real-time Prediction through FastAPI API
 
-Models
+The model was trained using YOLOv8 on annotated medical images.
 
-1. CNN - Tumor Detection
-	•	Input: 224x224 RGB image
-	•	Output: Binary (0 = Normal, 1 = Tumor)
-	•	Activation: Sigmoid
+---
 
-2. CNN - Tumor Type Classification
-	•	Input: 224x224 RGB image
-	•	Output: Binary (0 = Benign, 1 = Malignant)
-	•	Activation: Sigmoid
+## Dataset
 
-3. YOLOv8 - Object Detection
-	•	Input: Original image
-	•	Output: Bounding boxes with confidence scores
-	•	Model file: best.pt
+The dataset is organized in YOLO format.
 
-4. U-Net - Segmentation
-	•	Input: 224x224 RGB image
-	•	Output: Segmentation mask (224x224)
-	•	Threshold: 0.5
+Each image has a corresponding `.txt` label file with the same filename.
 
-⸻
+Label format:
 
-Preprocessing
-	•	Image resized to 224x224
-	•	Converted to RGB
-	•	Normalized by dividing by 255.0
-	•	Data type: float32
+```txt
+class x_center y_center width height
+```
 
-⸻
+Example:
 
-API Endpoints
+```txt
+0 0.41 0.39 0.11 0.15
+```
 
-POST /predict/tumor
+Where:
 
-Detect if image contains a tumor
-Response  
+* `0` → Cancer
+* `1` → Normal
+
+The remaining values represent the bounding box coordinates normalized between 0 and 1.
+
+---
+
+## Classes
+
+| Class ID | Label  |
+| -------- | ------ |
+| 0        | Cancer |
+| 1        | Normal |
+
+---
+
+## YOLO Data Configuration
+
+The project uses a `data.yaml` file to define:
+
+* Dataset paths
+* Train / Validation / Test directories
+* Number of classes
+* Class names
+
+Example:
+
+```yaml
+train: ../train/images
+val: ../valid/images
+test: ../test/images
+
+nc: 2
+names: ['cancer', 'normal']
+```
+
+---
+
+## Model
+
+This project uses:
+
+* YOLOv8
+* Ultralytics Framework
+* Python
+* FastAPI
+
+The model performs:
+
+* Object Detection
+* Classification
+* Localization
+
+at the same time.
+
+---
+
+## Training
+
+The model was trained using:
+
+* Training images → for learning
+* Validation images → for evaluation after each epoch
+* Test images → for final testing
+
+Training was performed for multiple epochs using GPU acceleration.
+
+---
+
+## Evaluation Metrics
+
+Since YOLO performs Detection + Classification together, the evaluation is based on:
+
+* mAP@50
+* mAP@50:95
+
+Model performance reached approximately:
+
+* 91% – 92% mAP
+
+---
+
+## API Integration
+
+A FastAPI backend was developed for real-time predictions.
+
+The API:
+
+* Receives an image
+* Runs YOLO inference
+* Returns:
+
+  * Prediction
+  * Confidence Score
+  * Output image with Bounding Box
+
+---
+
+## API Endpoints
+
+### Home Endpoint
+
+```http
+GET /
+```
+
+### Prediction Endpoint
+
+```http
+POST /predict
+```
+
+---
+
+## Example API Response
+
+```json
 {
-  "prediction": "Benign or Malignant",
-  "confidence": 0.93
+  "prediction": "cancer",
+  "confidence": 85.37,
+  "image": "http://127.0.0.1:8000/image/result.jpg"
 }
+```
 
+---
 
-POST /predict/type
+## Technologies Used
 
-Classify tumor as benign or malignant
-Response:
-{
-  "prediction": "Benign or Malignant",
-  "confidence": 0.93
-}
-POST /predict/detection
+* Python
+* YOLOv8
+* Ultralytics
+* OpenCV
+* FastAPI
+* Uvicorn
 
-Detect tumor bounding boxes
-Response:
-{
-  "boxes": [[x1, y1, x2, y2]],
-  "confidences": [0.91],
-  "count": 1
-}
-POST /predict/segmentation
+---
 
-Generate tumor mask
-Response: {
-  "mask": [[0,1,1,...]],
-  "coverage_percent": 12.5
-}
+## Project Structure
+
+```bash
 project/
 │
 ├── main.py
+├── best.pt
+├── data.yaml
 ├── requirements.txt
-├── models_links.txt
-├── README.md
-│
-├── notebooks/
-│   ├── cnn_binary.ipynb
-│   ├── cnn_type.ipynb
-│   ├── yolo.ipynb
-│   └── unet.ipynb
+├── uploads/
+├── results/
+└── README.md
+```
+
+---
+
+## Running the API
+
+Install dependencies:
+
+```bash
+pip install -r requirements.txt
+```
+
+Run the server:
+
+```bash
+uvicorn main:app --reload
+```
+
+Open Swagger Docs:
+
+```bash
+http://127.0.0.1:8000/docs
+```
+
+---
+
+## Output Example
+
+The model returns the uploaded mammogram image with detected tumor regions highlighted using bounding boxes.
+
+---
+
+## Future Improvements
+
+* Deploy the API publicly
+* Improve dataset size
+* Add segmentation support
+* Build full web integration
+* Support DICOM medical images
+
+---
+
+## Author
+
+Mohamed Karim
